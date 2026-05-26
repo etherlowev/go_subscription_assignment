@@ -45,7 +45,9 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/subscriptions/create": {
             "post": {
                 "description": "Creates a subscription",
                 "produces": [
@@ -67,8 +69,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK"
+                    "201": {
+                        "description": "Created"
                     }
                 }
             }
@@ -86,7 +88,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "subscription owner id",
+                        "description": "subscription user id",
                         "name": "user_id",
                         "in": "query"
                     },
@@ -172,8 +174,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK"
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             },
@@ -196,8 +198,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK"
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             }

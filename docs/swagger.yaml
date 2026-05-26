@@ -60,23 +60,6 @@ paths:
       summary: List subscription page
       tags:
       - subscription
-    post:
-      description: Creates a subscription
-      parameters:
-      - description: subscription request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/onlineSubscriptions_internal_models.SubscriptionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-      summary: Create a subscription
-      tags:
-      - subscription
   /api/subscriptions/{id}:
     delete:
       description: Deletes a subscription
@@ -89,8 +72,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
       summary: Delete a subscription
       tags:
       - subscription
@@ -129,16 +112,34 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
       summary: Update a subscription
+      tags:
+      - subscription
+  /api/subscriptions/create:
+    post:
+      description: Creates a subscription
+      parameters:
+      - description: subscription request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/onlineSubscriptions_internal_models.SubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+      summary: Create a subscription
       tags:
       - subscription
   /api/subscriptions/sum:
     get:
       description: Calculates a sum price of subscriptions for user between dates
       parameters:
-      - description: subscription owner id
+      - description: subscription user id
         in: query
         name: user_id
         type: string

@@ -29,7 +29,7 @@ type PostgresSubscriptionRepository struct {
 
 func (repo *PostgresSubscriptionRepository) GetById(ctx context.Context, id uuid.UUID) (*models.Subscription, error) {
 	rows, err := repo.Pool.Query(ctx, "select id, name, price, user_id, "+
-		"FORMAT(start_date, 'mm-YYYY') as start_date, FORMAT(end_date, 'mm-YYYY') as end_date "+
+		"TO_CHAR(start_date, 'mm-YYYY') as start_date, TO_CHAR(end_date, 'mm-YYYY') as end_date "+
 		"from subscriptions where id = $1", id)
 
 	if err != nil {
@@ -62,7 +62,7 @@ func (repo *PostgresSubscriptionRepository) Insert(ctx context.Context, uuid uui
 	tag, err := repo.Pool.Exec(
 		ctx,
 		"insert into subscriptions (id, name, price, user_id, start_date, end_date) "+
-			"values ($1, $2, $3, $4, TO_DATE($5, 'MM-YYYY'), TO_DATE($6, 'MM-YYYY'))",
+			"values ($1, $2, $3, $4, TO_DATE($5, 'MM-YYYY'), case when $6 = '' then null else TO_DATE($6, 'MM-YYYY') end)",
 		uuid,
 		&subscription.Name,
 		&subscription.Price,
@@ -110,7 +110,12 @@ func (repo *PostgresSubscriptionRepository) DeleteById(ctx context.Context, id u
 }
 
 func (repo *PostgresSubscriptionRepository) Page(ctx context.Context, limit int, offset int) (*[]models.Subscription, error) {
-	rows, err := repo.Pool.Query(ctx, "select * from subscriptions limit $1 offset $2", limit, offset)
+	rows, err := repo.Pool.Query(ctx, "select id, name, price, "+
+		"user_id, TO_CHAR(start_date, 'mm-YYYY') as start_date, TO_CHAR(end_date, 'mm-YYYY') as end_date "+
+		"from subscriptions limit $1 offset $2",
+		limit,
+		offset)
+
 	if err != nil {
 		return nil, err
 	}

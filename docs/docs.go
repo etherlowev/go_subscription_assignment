@@ -52,7 +52,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/subscriptions/create": {
             "post": {
                 "description": "Creates a subscription",
                 "produces": [
@@ -74,8 +76,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK"
+                    "201": {
+                        "description": "Created"
                     }
                 }
             }
@@ -93,7 +95,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "subscription owner id",
+                        "description": "subscription user id",
                         "name": "user_id",
                         "in": "query"
                     },
@@ -179,8 +181,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK"
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             },
@@ -203,8 +205,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK"
+                    "204": {
+                        "description": "No Content"
                     }
                 }
             }

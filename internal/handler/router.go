@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -9,9 +8,11 @@ import (
 	"log"
 	"net/http"
 	_ "onlineSubscriptions/docs"
+	"onlineSubscriptions/internal/errors"
 	"onlineSubscriptions/internal/middleware"
 	"onlineSubscriptions/internal/models"
 	"onlineSubscriptions/internal/service"
+	"regexp"
 	"strconv"
 )
 
@@ -20,21 +21,19 @@ type Router struct {
 	router  *mux.Router
 }
 
-func handleBadRequest(e error, w http.ResponseWriter) bool {
-	if e != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return true
+func writeJSON(w http.ResponseWriter, status int, v interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		log.Printf("json encode error: %v", err)
 	}
-	return false
 }
 
-func handleErr(e error, w http.ResponseWriter) bool {
-	if e != nil {
-		log.Printf("err: %v", e)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return true
+func writeError(w http.ResponseWriter, code int, msg string, err error) {
+	if err != nil {
+		log.Printf("%s: %v", msg, err)
 	}
-	return false
+	http.Error(w, msg, code)
 }
 
 func NewRouter(service service.SubscriptionService) (*Router, error) {
@@ -43,7 +42,8 @@ func NewRouter(service service.SubscriptionService) (*Router, error) {
 	router.Use(middleware.RecoveryMiddleware)
 	router.Use(middleware.JsonMiddleware)
 
-	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	router.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
+
 	subrouter := router.PathPrefix("/api/subscriptions").Subrouter()
 
 	r := &Router{
@@ -51,12 +51,12 @@ func NewRouter(service service.SubscriptionService) (*Router, error) {
 		service: service,
 	}
 
+	subrouter.HandleFunc("/", r.ListSubs).Methods(http.MethodGet)
+	subrouter.HandleFunc("/{id}", r.FindSub).Methods(http.MethodGet)
 	subrouter.HandleFunc("/sum", r.CalculateSum).Methods(http.MethodGet)
-	subrouter.HandleFunc("/{id}", r.FindSub).Methods(http.MethodGet)
-	subrouter.HandleFunc("/{id}", r.FindSub).Methods(http.MethodGet)
 
+	subrouter.HandleFunc("/create", r.CreateSubscription).Methods(http.MethodPost)
 	subrouter.HandleFunc("/{id}", r.UpdateSubscription).Methods(http.MethodPut)
-	subrouter.HandleFunc("/", r.CreateSubscription).Methods(http.MethodPost)
 	subrouter.HandleFunc("/{id}", r.DeleteSubscription).Methods(http.MethodDelete)
 
 	return r, nil
@@ -74,24 +74,18 @@ func (r *Router) FindSub(w http.ResponseWriter, req *http.Request) {
 	pathVariables := mux.Vars(req)
 	id := pathVariables["id"]
 	subId, err := uuid.Parse(id)
-	if handleBadRequest(err, w) {
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Id format is incorrect (not uuid)", err)
 		return
 	}
 
-	subscription, err := r.service.GetSubscriptionById(context.Background(), subId)
-	if handleErr(err, w) {
+	subscription, err := r.service.GetSubscriptionById(req.Context(), subId)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Failed to get subscription by id", err)
 		return
 	}
 
-	jsonResponse, err := json.Marshal(subscription)
-	if handleErr(err, w) {
-		return
-	}
-
-	_, err = w.Write(jsonResponse)
-	if handleErr(err, w) {
-		return
-	}
+	writeJSON(w, http.StatusOK, subscription)
 }
 
 // ListSubs godoc
@@ -106,28 +100,27 @@ func (r *Router) FindSub(w http.ResponseWriter, req *http.Request) {
 func (r *Router) ListSubs(w http.ResponseWriter, req *http.Request) {
 	urlQuery := req.URL.Query()
 	page, err := strconv.Atoi(urlQuery.Get("page"))
-	if handleBadRequest(err, w) {
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Page format is incorrect (not integer)", err)
 		return
 	}
 
 	perPage, err := strconv.Atoi(urlQuery.Get("perPage"))
-	if handleBadRequest(err, w) {
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "perPage format is incorrect (not integer)", err)
 		return
 	}
 
-	list, err := r.service.ListSubscriptions(context.Background(), page, perPage)
-	if handleErr(err, w) {
+	list, err := r.service.ListSubscriptions(req.Context(), page, perPage)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Failed to get a list of subscriptions", err)
 		return
 	}
 
-	jsonResponse, err := json.Marshal(list)
-	if handleErr(err, w) {
-		return
-	}
-
-	_, err = w.Write(jsonResponse)
-	if handleErr(err, w) {
-		return
+	if *list == nil {
+		writeJSON(w, http.StatusOK, make([]int, 0))
+	} else {
+		writeJSON(w, http.StatusOK, list)
 	}
 }
 
@@ -137,24 +130,26 @@ func (r *Router) ListSubs(w http.ResponseWriter, req *http.Request) {
 // @Tags subscription
 // @Produce json
 // @Param request body models.SubscriptionRequest true "subscription request"
-// @Success 200
-// @Router /api/subscriptions [post]
+// @Success 201
+// @Router /api/subscriptions/create [post]
 func (r *Router) CreateSubscription(w http.ResponseWriter, req *http.Request) {
 	var subscriptionRequest models.SubscriptionRequest
 	err := json.NewDecoder(req.Body).Decode(&subscriptionRequest)
-	if handleErr(err, w) {
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Failed to decode request body", err)
 		return
 	}
 
-	saved, err := r.service.InsertSubscription(context.Background(), &subscriptionRequest)
-	if handleErr(err, w) {
+	saved, err := r.service.InsertSubscription(req.Context(), &subscriptionRequest)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Failed to insert a subscription", err)
 		return
 	}
 
 	if saved {
-		w.WriteHeader(http.StatusOK)
+		writeJSON(w, http.StatusCreated, nil)
 	} else {
-		w.WriteHeader(http.StatusNotModified)
+		writeJSON(w, http.StatusNotModified, nil)
 	}
 }
 
@@ -165,7 +160,7 @@ func (r *Router) CreateSubscription(w http.ResponseWriter, req *http.Request) {
 // @Produce json
 // @Param id path string true "subscription id"
 // @Param request body models.SubscriptionRequest true "subscription request"
-// @Success 200
+// @Success 204
 // @Router /api/subscriptions/{id} [put]
 func (r *Router) UpdateSubscription(w http.ResponseWriter, req *http.Request) {
 	pathVariables := mux.Vars(req)
@@ -173,23 +168,28 @@ func (r *Router) UpdateSubscription(w http.ResponseWriter, req *http.Request) {
 
 	subId, err := uuid.Parse(id)
 
-	handleBadRequest(err, w)
-
-	var request models.SubscriptionRequest
-	err = json.NewDecoder(req.Body).Decode(&request)
-	if handleErr(err, w) {
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Subscription id format is incorrect (not uuid)", err)
 		return
 	}
 
-	saved, err := r.service.UpdateSubscription(context.Background(), subId, &request)
-	if handleErr(err, w) {
+	var request models.SubscriptionRequest
+	err = json.NewDecoder(req.Body).Decode(&request)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Failed to decode request body", err)
+		return
+	}
+
+	saved, err := r.service.UpdateSubscription(req.Context(), subId, &request)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Failed to update subscription", err)
 		return
 	}
 
 	if saved {
-		w.WriteHeader(http.StatusOK)
+		writeJSON(w, http.StatusNoContent, nil)
 	} else {
-		w.WriteHeader(http.StatusNotModified)
+		writeJSON(w, http.StatusNotModified, nil)
 	}
 }
 
@@ -199,23 +199,29 @@ func (r *Router) UpdateSubscription(w http.ResponseWriter, req *http.Request) {
 // @Tags subscription
 // @Produce json
 // @Param id path string true "subscription id"
-// @Success 200
+// @Success 204
 // @Router /api/subscriptions/{id} [delete]
 func (r *Router) DeleteSubscription(w http.ResponseWriter, req *http.Request) {
-	var subscription models.Subscription
-	if err := json.NewDecoder(req.Body).Decode(&subscription); err != nil {
-		handleErr(err, w)
+	pathVariables := mux.Vars(req)
+	id := pathVariables["id"]
+
+	subUid, err := uuid.Parse(id)
+
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Subscription id format is incorrect (not uuid)", err)
+		return
 	}
 
-	removed, err := r.service.RemoveSubscription(context.Background(), subscription.Id)
-	if handleErr(err, w) {
+	removed, err := r.service.RemoveSubscription(req.Context(), subUid)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Failed to remove a subscription", err)
 		return
 	}
 
 	if removed {
-		w.WriteHeader(http.StatusOK)
+		writeJSON(w, http.StatusNoContent, nil)
 	} else {
-		w.WriteHeader(http.StatusNotModified)
+		writeJSON(w, http.StatusNotModified, nil)
 	}
 }
 
@@ -237,24 +243,38 @@ func (r *Router) CalculateSum(w http.ResponseWriter, req *http.Request) {
 	dateFrom := urlQuery.Get("date_from")
 	dateTo := urlQuery.Get("date_to")
 
+	regex, err := regexp.Compile("^\\d{2}-\\d{4}$")
+
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to compile regex", err)
+		return
+	}
+
+	if !regex.MatchString(dateFrom) {
+		dateError := &errors.ParseError{ParsedString: dateFrom}
+		writeError(w, http.StatusBadRequest, "Invalid date format", dateError)
+		return
+	}
+
+	if !regex.MatchString(dateTo) {
+		dateError := &errors.ParseError{ParsedString: dateTo}
+		writeError(w, http.StatusBadRequest, "Invalid date format", dateError)
+		return
+	}
+
 	if userId != "" {
 		_, err := uuid.Parse(userId)
-		if handleBadRequest(err, w) {
-			return
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "User id format is incorrect (not uuid)", err)
 		}
 	}
 
-	res, err := r.service.SubscriptionSum(context.Background(), userId, subName, dateFrom, dateTo)
-	if handleErr(err, w) {
-		return
+	res, err := r.service.SubscriptionSum(req.Context(), userId, subName, dateFrom, dateTo)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to get a subscription sum", err)
 	}
 
-	jsonRes, err := json.Marshal(res)
-	if handleErr(err, w) {
-		return
-	}
-	_, err = w.Write(jsonRes)
-	handleErr(err, w)
+	writeJSON(w, http.StatusOK, res)
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
