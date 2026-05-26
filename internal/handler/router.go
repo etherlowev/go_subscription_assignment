@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	_ "onlineSubscriptions/docs"
+	"onlineSubscriptions/internal/middleware"
 	"onlineSubscriptions/internal/models"
 	"onlineSubscriptions/internal/service"
 	"strconv"
@@ -39,6 +40,8 @@ func handleErr(e error, w http.ResponseWriter) bool {
 func NewRouter(service service.SubscriptionService) (*Router, error) {
 	router := mux.NewRouter()
 	router.StrictSlash(true)
+	router.Use(middleware.RecoveryMiddleware)
+	router.Use(middleware.JsonMiddleware)
 
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 	subrouter := router.PathPrefix("/api/subscriptions").Subrouter()
@@ -48,7 +51,7 @@ func NewRouter(service service.SubscriptionService) (*Router, error) {
 		service: service,
 	}
 
-	subrouter.HandleFunc("/list", r.ListSubs).Methods(http.MethodGet)
+	subrouter.HandleFunc("/", r.ListSubs).Methods(http.MethodGet)
 	subrouter.HandleFunc("/{id}", r.FindSub).Methods(http.MethodGet)
 
 	subrouter.HandleFunc("/{id}", r.UpdateSubscription).Methods(http.MethodPut)
@@ -63,9 +66,9 @@ func NewRouter(service service.SubscriptionService) (*Router, error) {
 // @Description Get a single subscription by ID
 // @Tags subscription
 // @Produce json
-// @Param id path uuid true "subscription ID"
+// @Param id path string true "subscription ID"
 // @Success 200 {object} models.Subscription
-// @Router /{id} [get]
+// @Router /api/subscriptions/{id} [get]
 func (r *Router) FindSub(w http.ResponseWriter, req *http.Request) {
 	pathVariables := mux.Vars(req)
 	id := pathVariables["id"]
@@ -95,10 +98,10 @@ func (r *Router) FindSub(w http.ResponseWriter, req *http.Request) {
 // @Description Get a page of subscriptions
 // @Tags subscription
 // @Produce json
-// @Param page path int true "page number"
-// @Param perPage path int true "amount of entries in page"
+// @Param page query int true "page number"
+// @Param perPage query int true "amount of entries in page"
 // @Success 200 {array} models.Subscription
-// @Router /{id} [get]
+// @Router /api/subscriptions [get]
 func (r *Router) ListSubs(w http.ResponseWriter, req *http.Request) {
 	urlQuery := req.URL.Query()
 	page, err := strconv.Atoi(urlQuery.Get("page"))
@@ -127,6 +130,14 @@ func (r *Router) ListSubs(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// CreateSubscription godoc
+// @Summary Create a subscription
+// @Description Creates a subscription
+// @Tags subscription
+// @Produce json
+// @Param request body models.SubscriptionRequest true "subscription request"
+// @Success 200
+// @Router /api/subscriptions [post]
 func (r *Router) CreateSubscription(w http.ResponseWriter, req *http.Request) {
 	var subscriptionRequest models.SubscriptionRequest
 	err := json.NewDecoder(req.Body).Decode(&subscriptionRequest)
@@ -146,6 +157,15 @@ func (r *Router) CreateSubscription(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// UpdateSubscription godoc
+// @Summary Update a subscription
+// @Description Updates a subscription
+// @Tags subscription
+// @Produce json
+// @Param id path string true "subscription id"
+// @Param request body models.SubscriptionRequest true "subscription request"
+// @Success 200
+// @Router /api/subscriptions/{id} [put]
 func (r *Router) UpdateSubscription(w http.ResponseWriter, req *http.Request) {
 	pathVariables := mux.Vars(req)
 	id := pathVariables["id"]
@@ -172,6 +192,14 @@ func (r *Router) UpdateSubscription(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// DeleteSubscription godoc
+// @Summary Delete a subscription
+// @Description Deletes a subscription
+// @Tags subscription
+// @Produce json
+// @Param id path string true "subscription id"
+// @Success 200
+// @Router /api/subscriptions/{id} [delete]
 func (r *Router) DeleteSubscription(w http.ResponseWriter, req *http.Request) {
 	var subscription models.Subscription
 	if err := json.NewDecoder(req.Body).Decode(&subscription); err != nil {

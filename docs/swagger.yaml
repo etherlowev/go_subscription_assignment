@@ -1,10 +1,22 @@
-basePath: /handler/subscriptions
 definitions:
   onlineSubscriptions_internal_models.Subscription:
     properties:
       end_date:
         type: string
       id:
+        type: string
+      name:
+        type: string
+      price:
+        type: integer
+      start_date:
+        type: string
+      user_id:
+        type: string
+    type: object
+  onlineSubscriptions_internal_models.SubscriptionRequest:
+    properties:
+      end_date:
         type: string
       name:
         type: string
@@ -22,17 +34,17 @@ info:
   title: Subscription handler
   version: "1.0"
 paths:
-  /{id}:
+  /api/subscriptions:
     get:
       description: Get a page of subscriptions
       parameters:
       - description: page number
-        in: path
+        in: query
         name: page
         required: true
         type: integer
       - description: amount of entries in page
-        in: path
+        in: query
         name: perPage
         required: true
         type: integer
@@ -46,6 +58,80 @@ paths:
               $ref: '#/definitions/onlineSubscriptions_internal_models.Subscription'
             type: array
       summary: List subscription page
+      tags:
+      - subscription
+    post:
+      description: Creates a subscription
+      parameters:
+      - description: subscription request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/onlineSubscriptions_internal_models.SubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Create a subscription
+      tags:
+      - subscription
+  /api/subscriptions/{id}:
+    delete:
+      description: Deletes a subscription
+      parameters:
+      - description: subscription id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Delete a subscription
+      tags:
+      - subscription
+    get:
+      description: Get a single subscription by ID
+      parameters:
+      - description: subscription ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/onlineSubscriptions_internal_models.Subscription'
+      summary: Get subscription by id
+      tags:
+      - subscription
+    put:
+      description: Updates a subscription
+      parameters:
+      - description: subscription id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: subscription request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/onlineSubscriptions_internal_models.SubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Update a subscription
       tags:
       - subscription
 swagger: "2.0"

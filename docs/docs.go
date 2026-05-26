@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/{id}": {
+        "/api/subscriptions": {
             "get": {
                 "description": "Get a page of subscriptions",
                 "produces": [
@@ -30,14 +30,14 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "page number",
                         "name": "page",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     },
                     {
                         "type": "integer",
                         "description": "amount of entries in page",
                         "name": "perPage",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -50,6 +50,118 @@ const docTemplate = `{
                                 "$ref": "#/definitions/onlineSubscriptions_internal_models.Subscription"
                             }
                         }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a subscription",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscription"
+                ],
+                "summary": "Create a subscription",
+                "parameters": [
+                    {
+                        "description": "subscription request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/onlineSubscriptions_internal_models.SubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/subscriptions/{id}": {
+            "get": {
+                "description": "Get a single subscription by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscription"
+                ],
+                "summary": "Get subscription by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/onlineSubscriptions_internal_models.Subscription"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates a subscription",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscription"
+                ],
+                "summary": "Update a subscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "subscription id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "subscription request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/onlineSubscriptions_internal_models.SubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a subscription",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscription"
+                ],
+                "summary": "Delete a subscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "subscription id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -78,6 +190,26 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "onlineSubscriptions_internal_models.SubscriptionRequest": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
         }
     }
 }`
@@ -86,7 +218,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/handler/subscriptions",
+	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Subscription handler",
 	Description:      "Api for handling subscriptions",

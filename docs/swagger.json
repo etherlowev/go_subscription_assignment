@@ -7,9 +7,8 @@
         "version": "1.0"
     },
     "host": "localhost:8080",
-    "basePath": "/handler/subscriptions",
     "paths": {
-        "/{id}": {
+        "/api/subscriptions": {
             "get": {
                 "description": "Get a page of subscriptions",
                 "produces": [
@@ -24,14 +23,14 @@
                         "type": "integer",
                         "description": "page number",
                         "name": "page",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     },
                     {
                         "type": "integer",
                         "description": "amount of entries in page",
                         "name": "perPage",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -46,6 +45,118 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Creates a subscription",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscription"
+                ],
+                "summary": "Create a subscription",
+                "parameters": [
+                    {
+                        "description": "subscription request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/onlineSubscriptions_internal_models.SubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/subscriptions/{id}": {
+            "get": {
+                "description": "Get a single subscription by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscription"
+                ],
+                "summary": "Get subscription by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/onlineSubscriptions_internal_models.Subscription"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates a subscription",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscription"
+                ],
+                "summary": "Update a subscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "subscription id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "subscription request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/onlineSubscriptions_internal_models.SubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a subscription",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscription"
+                ],
+                "summary": "Delete a subscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "subscription id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
             }
         }
     },
@@ -57,6 +168,26 @@
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "onlineSubscriptions_internal_models.SubscriptionRequest": {
+            "type": "object",
+            "properties": {
+                "end_date": {
                     "type": "string"
                 },
                 "name": {
