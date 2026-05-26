@@ -1,0 +1,51 @@
+basePath: /handler/subscriptions
+definitions:
+  onlineSubscriptions_internal_models.Subscription:
+    properties:
+      end_date:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: integer
+      start_date:
+        type: string
+      user_id:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Api for handling subscriptions
+  title: Subscription handler
+  version: "1.0"
+paths:
+  /{id}:
+    get:
+      description: Get a page of subscriptions
+      parameters:
+      - description: page number
+        in: path
+        name: page
+        required: true
+        type: integer
+      - description: amount of entries in page
+        in: path
+        name: perPage
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/onlineSubscriptions_internal_models.Subscription'
+            type: array
+      summary: List subscription page
+      tags:
+      - subscription
+swagger: "2.0"

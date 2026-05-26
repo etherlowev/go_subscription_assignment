@@ -90,6 +90,15 @@ func (r *Router) FindSub(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// ListSubs godoc
+// @Summary List subscription page
+// @Description Get a page of subscriptions
+// @Tags subscription
+// @Produce json
+// @Param page path int true "page number"
+// @Param perPage path int true "amount of entries in page"
+// @Success 200 {array} models.Subscription
+// @Router /{id} [get]
 func (r *Router) ListSubs(w http.ResponseWriter, req *http.Request) {
 	urlQuery := req.URL.Query()
 	page, err := strconv.Atoi(urlQuery.Get("page"))
