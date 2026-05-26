@@ -3,4 +3,4 @@ server:
   timeout: "10s"
 
 database:
-  url: "postgres://postgres:postgres@localhost:5432/subscriptions"
+  url: "postgres://subs:postgres@postgres-db:5432/subscriptions"

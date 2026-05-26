@@ -31,11 +31,11 @@ func Load() (*Config, error) {
 
 	if _, err := os.Stat(configPath); err == nil {
 		if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-			log.Fatalf("Couldn't load configuration from file: %w", err)
+			log.Fatalf("Couldn't load configuration from file: %v", err)
 		}
 	} else {
 		if err := cleanenv.ReadEnv(&cfg); err != nil {
-			log.Fatalf("Couldn't load configuration from environment: %w", err)
+			log.Fatalf("Couldn't load configuration from environment: %v", err)
 		}
 	}
 

@@ -1,0 +1,42 @@
+services:
+  app:
+    hostname: app
+    image: test:latest
+    container_name: sub_app
+    ports:
+      - "8080:8080"
+    command: ./main
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
+  postgres-db:
+    hostname: postgres
+    image: postgres:17-alpine
+    container_name: sub_db
+    shm_size: 2gb
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4gb
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: subs
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: subscriptions
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U subs -d subscriptions"]
+      start_period: 15s
+      start_interval: 1s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - /var/lib/postgresql/17/data
+    command: postgres -c max_connections=25
+
+volumes:
+  pg_data:
+    driver: local
