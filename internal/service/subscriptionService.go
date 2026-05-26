@@ -20,6 +20,8 @@ type SubscriptionService interface {
 	RemoveSubscription(ctx context.Context, id uuid.UUID) (bool, error)
 
 	ListSubscriptions(ctx context.Context, page int, perPage int) (*[]models.Subscription, error)
+
+	SubscriptionSum(ctx context.Context, userId string, subName string, dateFrom string, dateTo string) (*models.SubscriptionPriceSum, error)
 }
 
 type PostgresSubscriptionService struct {
@@ -77,4 +79,14 @@ func (service *PostgresSubscriptionService) RemoveSubscription(ctx context.Conte
 func (service *PostgresSubscriptionService) ListSubscriptions(ctx context.Context, page int, perPage int) (*[]models.Subscription, error) {
 	limit, offset := perPage, max(0, page-1)*perPage
 	return service.Repository.Page(ctx, limit, offset)
+}
+
+func (service *PostgresSubscriptionService) SubscriptionSum(
+	ctx context.Context,
+	userId string,
+	subName string,
+	dateFrom string,
+	dateTo string) (*models.SubscriptionPriceSum, error) {
+
+	return service.Repository.CalculateSubscriptionSum(ctx, userId, subName, dateFrom, dateTo)
 }

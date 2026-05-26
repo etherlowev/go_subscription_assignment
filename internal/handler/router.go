@@ -51,7 +51,8 @@ func NewRouter(service service.SubscriptionService) (*Router, error) {
 		service: service,
 	}
 
-	subrouter.HandleFunc("/", r.ListSubs).Methods(http.MethodGet)
+	subrouter.HandleFunc("/sum", r.CalculateSum).Methods(http.MethodGet)
+	subrouter.HandleFunc("/{id}", r.FindSub).Methods(http.MethodGet)
 	subrouter.HandleFunc("/{id}", r.FindSub).Methods(http.MethodGet)
 
 	subrouter.HandleFunc("/{id}", r.UpdateSubscription).Methods(http.MethodPut)
@@ -216,6 +217,44 @@ func (r *Router) DeleteSubscription(w http.ResponseWriter, req *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusNotModified)
 	}
+}
+
+// CalculateSum godoc
+// @Summary Calculate a sum price of subscriptions
+// @Description Calculates a sum price of subscriptions for user between dates
+// @Tags subscription
+// @Produce json
+// @Param user_id query string false "subscription user id"
+// @Param subscription_name query string false "subscription name"
+// @Param date_from query string false "subscription start date from"
+// @Param date_to query string false "subscription start date to"
+// @Success 200
+// @Router /api/subscriptions/sum [get]
+func (r *Router) CalculateSum(w http.ResponseWriter, req *http.Request) {
+	urlQuery := req.URL.Query()
+	userId := urlQuery.Get("user_id")
+	subName := urlQuery.Get("subscription_name")
+	dateFrom := urlQuery.Get("date_from")
+	dateTo := urlQuery.Get("date_to")
+
+	if userId != "" {
+		_, err := uuid.Parse(userId)
+		if handleBadRequest(err, w) {
+			return
+		}
+	}
+
+	res, err := r.service.SubscriptionSum(context.Background(), userId, subName, dateFrom, dateTo)
+	if handleErr(err, w) {
+		return
+	}
+
+	jsonRes, err := json.Marshal(res)
+	if handleErr(err, w) {
+		return
+	}
+	_, err = w.Write(jsonRes)
+	handleErr(err, w)
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {

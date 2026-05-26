@@ -5,8 +5,8 @@ create table if not exists public.subscriptions (
     name text not null,
     price integer not null,
     user_id uuid not null,
-    start_date character varying(8),
-    end_date character varying(8)
+    start_date date not null,
+    end_date date
 );
 
 commit;

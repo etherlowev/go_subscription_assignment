@@ -2,7 +2,7 @@ package models
 
 import "github.com/google/uuid"
 
-type SubscriptionRequest struct {
+type baseStruct struct {
 	Name      string    `json:"name"`
 	Price     int       `json:"price"`
 	UserId    uuid.UUID `json:"user_id"`
@@ -10,7 +10,15 @@ type SubscriptionRequest struct {
 	EndDate   string    `json:"end_date"`
 }
 
+type SubscriptionRequest struct {
+	baseStruct
+}
+
 type Subscription struct {
 	Id uuid.UUID `json:"id"`
-	SubscriptionRequest
+	baseStruct
+}
+
+type SubscriptionPriceSum struct {
+	Sum int `json:"sum"`
 }

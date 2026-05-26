@@ -22,14 +22,14 @@ import (
 //go:embed db/*.sql
 var migrationFiles embed.FS
 
-func migrateDb(db_url string) {
+func migrateDb(dbUrl string) {
 	d, err := iofs.New(migrationFiles, "db")
 	if err != nil {
 		log.Print("Failed to create iofs")
 		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithSourceInstance("iofs", d, db_url+"?sslmode=disable")
+	m, err := migrate.NewWithSourceInstance("iofs", d, dbUrl+"?sslmode=disable")
 	if err != nil {
 		log.Print("Failed to create migration instance")
 		log.Fatal(err)

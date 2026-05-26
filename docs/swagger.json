@@ -73,6 +73,49 @@
                 }
             }
         },
+        "/api/subscriptions/sum": {
+            "get": {
+                "description": "Calculates a sum price of subscriptions for user between dates",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscription"
+                ],
+                "summary": "Calculate a sum price of subscriptions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "subscription owner id",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "subscription name",
+                        "name": "subscription_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "subscription start date from",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "subscription start date to",
+                        "name": "date_to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/api/subscriptions/{id}": {
             "get": {
                 "description": "Get a single subscription by ID",

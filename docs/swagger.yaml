@@ -134,4 +134,32 @@ paths:
       summary: Update a subscription
       tags:
       - subscription
+  /api/subscriptions/sum:
+    get:
+      description: Calculates a sum price of subscriptions for user between dates
+      parameters:
+      - description: subscription owner id
+        in: query
+        name: user_id
+        type: string
+      - description: subscription name
+        in: query
+        name: subscription_name
+        type: string
+      - description: subscription start date from
+        in: query
+        name: date_from
+        type: string
+      - description: subscription start date to
+        in: query
+        name: date_to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Calculate a sum price of subscriptions
+      tags:
+      - subscription
 swagger: "2.0"
