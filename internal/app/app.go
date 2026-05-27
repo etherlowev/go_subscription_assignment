@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"onlineSubscriptions/internal/config"
 	"onlineSubscriptions/internal/handler"
-	services "onlineSubscriptions/internal/service"
+	"onlineSubscriptions/internal/services"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,29 +22,39 @@ import (
 //go:embed db/*.sql
 var migrationFiles embed.FS
 
+var logger = log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile)
+
 func migrateDb(dbUrl string) {
+	logger.Printf("Attempting to migrate database")
 	d, err := iofs.New(migrationFiles, "db")
 	if err != nil {
-		log.Print("Failed to create iofs")
-		log.Fatal(err)
+		logger.Print("Failed to create iofs")
+		logger.Fatal(err)
 	}
 
 	m, err := migrate.NewWithSourceInstance("iofs", d, dbUrl+"?sslmode=disable")
 	if err != nil {
-		log.Print("Failed to create migration instance")
-		log.Fatal(err)
+		logger.Print("Failed to create migration instance")
+		logger.Fatal(err)
 	}
 
-	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Print("Failed to migrate to database")
-		log.Fatal(err)
+	migrationAppError := m.Up()
+
+	if migrationAppError != nil && !errors.Is(migrationAppError, migrate.ErrNoChange) {
+		logger.Print("Failed to migrate to database")
+		logger.Fatal(err)
+	} else if errors.Is(migrationAppError, migrate.ErrNoChange) {
+		logger.Print("No changes applied to the database")
 	}
+
+	logger.Printf("Database migration is complete")
 }
 
 func Run() {
+	logger.Print("Starting server")
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		logger.Fatalf("Failed to load configuration: %v", err)
 	}
 
 	migrateDb(cfg.Database.Url)
@@ -52,7 +62,7 @@ func Run() {
 	connStr := cfg.Database.Url
 	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	defer pool.Close()
 
@@ -60,7 +70,7 @@ func Run() {
 
 	router, err := handler.NewRouter(service)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	srv := &http.Server{
@@ -83,8 +93,8 @@ func Run() {
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		logger.Fatalf("Server forced to shutdown: %v", err)
 	}
 
-	log.Println("Server shutdown gracefully")
+	logger.Println("Server shutdown gracefully")
 }

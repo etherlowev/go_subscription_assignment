@@ -1,11 +1,11 @@
-package service
+package services
 
 import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"onlineSubscriptions/internal/models"
-	repositories "onlineSubscriptions/internal/repository"
+	"onlineSubscriptions/internal/repositories"
 )
 
 type SubscriptionService interface {

@@ -1,4 +1,4 @@
-package repository
+package repositories
 
 import (
 	"context"
@@ -125,9 +125,13 @@ func (repo *PostgresSubscriptionRepository) Page(ctx context.Context, limit int,
 	for {
 		if rows.Next() {
 			var sub models.Subscription
-			scanErr := rows.Scan(&sub.Id, &sub.Name, &sub.Price, &sub.UserId, &sub.StartDate, &sub.EndDate)
+			var endDate *string
+			scanErr := rows.Scan(&sub.Id, &sub.Name, &sub.Price, &sub.UserId, &sub.StartDate, &endDate)
 			if scanErr != nil {
 				return nil, scanErr
+			}
+			if endDate != nil {
+				sub.EndDate = *endDate
 			}
 			results = append(results, sub)
 		} else {

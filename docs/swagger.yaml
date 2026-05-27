@@ -31,7 +31,7 @@ host: localhost:8080
 info:
   contact: {}
   description: Api for handling subscriptions
-  title: Subscription handler
+  title: Subscription api
   version: "1.0"
 paths:
   /api/subscriptions:

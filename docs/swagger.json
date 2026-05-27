@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "Api for handling subscriptions",
-        "title": "Subscription handler",
+        "title": "Subscription api",
         "contact": {},
         "version": "1.0"
     },

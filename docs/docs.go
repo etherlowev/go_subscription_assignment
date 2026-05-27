@@ -265,7 +265,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Subscription handler",
+	Title:            "Subscription api",
 	Description:      "Api for handling subscriptions",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
