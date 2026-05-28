@@ -17,8 +17,12 @@ type SubscriptionRequest struct {
 }
 
 type Subscription struct {
-	Id uuid.UUID `json:"id"`
-	SubscriptionRequest
+	Id        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Price     int       `json:"price"`
+	UserId    uuid.UUID `json:"user_id"`
+	StartDate string    `json:"start_date"`
+	EndDate   string    `json:"end_date,omitempty"`
 }
 
 type SubscriptionPriceSum struct {

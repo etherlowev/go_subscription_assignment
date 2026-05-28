@@ -28,6 +28,10 @@ type PostgresSubscriptionRepository struct {
 	Pool *pgxpool.Pool
 }
 
+func NewPostgresSubscriptionRepository(pool *pgxpool.Pool) *PostgresSubscriptionRepository {
+	return &PostgresSubscriptionRepository{Pool: pool}
+}
+
 func (repo *PostgresSubscriptionRepository) GetById(ctx context.Context, id uuid.UUID) (*models.Subscription, error) {
 	rows, err := repo.Pool.Query(ctx, "select id, name, price, user_id, "+
 		"TO_CHAR(start_date, 'mm-YYYY') as start_date, TO_CHAR(end_date, 'mm-YYYY') as end_date "+

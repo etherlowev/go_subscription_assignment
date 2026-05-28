@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"onlineSubscriptions/internal/models"
 	"onlineSubscriptions/internal/repositories"
 )
@@ -28,13 +27,9 @@ type PostgresSubscriptionService struct {
 	Repository repositories.SubscriptionRepository
 }
 
-func NewSubscriptionService(Pool *pgxpool.Pool) *PostgresSubscriptionService {
-	repo := &repositories.PostgresSubscriptionRepository{
-		Pool: Pool,
-	}
-
+func NewSubscriptionService(repository repositories.SubscriptionRepository) *PostgresSubscriptionService {
 	service := &PostgresSubscriptionService{
-		Repository: repo,
+		Repository: repository,
 	}
 
 	return service

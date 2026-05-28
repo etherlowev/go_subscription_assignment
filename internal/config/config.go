@@ -23,7 +23,7 @@ type DatabaseConfig struct {
 
 func Load() (*Config, error) {
 	var cfg Config
-	configPath := "config.yaml"
+	configPath := "config_local.yaml"
 
 	if envPath := os.Getenv("CONFIG_PATH"); envPath != "" {
 		configPath = envPath

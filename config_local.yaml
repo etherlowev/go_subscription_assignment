@@ -1,0 +1,6 @@
+server:
+  port: "8080"
+  timeout: "10s"
+
+database:
+  url: "postgres://subs:postgres@localhost:5432/subscriptions"

@@ -6,6 +6,8 @@ services:
     ports:
       - "8080:8080"
     command: ./main
+    environment:
+      - DATABASE_URL=postgres://subs:postgres@postgres-db:5432/subscriptions
     depends_on:
       postgres-db:
         condition: service_healthy

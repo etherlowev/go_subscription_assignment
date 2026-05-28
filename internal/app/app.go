@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"onlineSubscriptions/internal/config"
 	"onlineSubscriptions/internal/handler"
+	"onlineSubscriptions/internal/repositories"
 	"onlineSubscriptions/internal/services"
 	"os"
 	"os/signal"
@@ -66,7 +67,9 @@ func Run() {
 	}
 	defer pool.Close()
 
-	service := services.NewSubscriptionService(pool)
+	repository := repositories.NewPostgresSubscriptionRepository(pool)
+
+	service := services.NewSubscriptionService(repository)
 
 	router, err := handler.NewRouter(service)
 	if err != nil {

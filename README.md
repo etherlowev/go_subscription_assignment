@@ -41,3 +41,9 @@ docker-compose -f docker/docker-compose.yml up -d
 ### 3. Документация API
 После запуска интерфейс Swagger UI доступен по адресу:
 > http://localhost:8080/swagger/
+
+### 4. Тесты
+В проекте есть простой набор тестов для сервисного слоя:
+```bash
+go test ./internal... | grep -v "no tests to run" | grep -v "no test files"
+```
