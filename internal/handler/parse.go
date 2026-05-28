@@ -8,7 +8,7 @@ import (
 
 func ParseUuidQuery(raw string) (uuid.UUID, error) {
 	if raw == "" {
-		return uuid.Nil, fmt.Errorf("Empty uuid")
+		return uuid.Nil, fmt.Errorf("empty uuid")
 	}
 	uid, err := uuid.Parse(raw)
 
@@ -21,7 +21,7 @@ func ParseUuidQuery(raw string) (uuid.UUID, error) {
 
 func ParseIntQuery(raw string) (int, error) {
 	if raw == "" {
-		return 0, fmt.Errorf("Empty int")
+		return 0, fmt.Errorf("empty int")
 	}
 
 	v, err := strconv.Atoi(raw)
