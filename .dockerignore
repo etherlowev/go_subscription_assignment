@@ -1,4 +1,5 @@
 .idea
 .dockerignore
+.gitignore
 README.md
 docker
