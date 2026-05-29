@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"onlineSubscriptions/internal/models"
 	"onlineSubscriptions/internal/repositories"
 )
@@ -36,7 +37,15 @@ func NewSubscriptionService(repository repositories.SubscriptionRepository) *Pos
 }
 
 func (service *PostgresSubscriptionService) GetSubscriptionById(ctx context.Context, id uuid.UUID) (*models.Subscription, error) {
-	return service.Repository.GetById(ctx, id)
+	sub, err := service.Repository.GetById(ctx, id)
+
+	if err != nil {
+		return nil, err
+	}
+	if sub == nil {
+		return nil, pgx.ErrNoRows
+	}
+	return sub, nil
 }
 
 func (service *PostgresSubscriptionService) SubscriptionExistsById(ctx context.Context, id uuid.UUID) (bool, error) {
@@ -64,7 +73,7 @@ func (service *PostgresSubscriptionService) UpdateSubscription(ctx context.Conte
 	if exists {
 		return service.Repository.Update(ctx, subId, request)
 	}
-	return false, nil
+	return false, pgx.ErrNoRows
 }
 
 func (service *PostgresSubscriptionService) RemoveSubscription(ctx context.Context, id uuid.UUID) (bool, error) {

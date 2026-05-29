@@ -2,11 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5"
 	"net/http"
-	"onlineSubscriptions/internal/errors"
 	"onlineSubscriptions/internal/models"
-	"regexp"
+	"onlineSubscriptions/internal/validators"
 )
 
 // FindSub godoc
@@ -30,15 +31,15 @@ func (r *Router) FindSub(w http.ResponseWriter, req *http.Request) {
 
 	subscription, err := r.service.GetSubscriptionById(req.Context(), subId)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Failed to get subscription by id", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "Subscription not found", nil)
+		} else {
+			writeError(w, http.StatusBadRequest, "Failed to get subscription by id", err)
+		}
 		return
 	}
 
-	if subscription == nil {
-		writeError(w, http.StatusNotFound, "Subscription not found", nil)
-	} else {
-		writeJSON(w, http.StatusOK, subscription)
-	}
+	writeJSON(w, http.StatusOK, subscription)
 }
 
 // ListSubs godoc
@@ -155,7 +156,11 @@ func (r *Router) UpdateSubscription(w http.ResponseWriter, req *http.Request) {
 
 	saved, err := r.service.UpdateSubscription(req.Context(), subId, &subscriptionRequest)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Failed to update subscription", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "Subscription not found", nil)
+		} else {
+			writeError(w, http.StatusBadRequest, "Failed to update subscription", err)
+		}
 		return
 	}
 
@@ -221,22 +226,9 @@ func (r *Router) CalculateSum(w http.ResponseWriter, req *http.Request) {
 		"userId: %v, subName: %v, dateFrom: %v, dateTo: %v",
 		userId, subName, dateFrom, dateTo)
 
-	regex, err := regexp.Compile("^\\d{2}-\\d{4}$")
-
+	err := validators.ValidateDates(dateFrom, dateTo)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to compile regex", err)
-		return
-	}
-
-	if dateFrom != "" && !regex.MatchString(dateFrom) {
-		_ = &errors.ParseError{ParsedString: dateFrom}
-		writeError(w, http.StatusBadRequest, "Invalid date_from format", nil)
-		return
-	}
-
-	if dateTo != "" && !regex.MatchString(dateTo) {
-		_ = &errors.ParseError{ParsedString: dateTo}
-		writeError(w, http.StatusBadRequest, "Invalid date_to format", nil)
+		writeError(w, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
 

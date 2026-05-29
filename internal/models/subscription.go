@@ -3,8 +3,7 @@ package models
 import (
 	"errors"
 	"github.com/google/uuid"
-	"regexp"
-	"strconv"
+	"onlineSubscriptions/internal/validators"
 	"strings"
 )
 
@@ -30,11 +29,7 @@ type SubscriptionPriceSum struct {
 }
 
 func (r SubscriptionRequest) Validate() error {
-	regex, err := regexp.Compile("^\\d{2}-\\d{4}$")
 	var valErrors = make([]string, 0)
-	if err != nil {
-		return err
-	}
 
 	if r.Price < 0 {
 		valErrors = append(valErrors, "price must be greater than or equal zero")
@@ -48,68 +43,15 @@ func (r SubscriptionRequest) Validate() error {
 		valErrors = append(valErrors, "user_id can't be empty")
 	}
 
-	needsDateVal := r.StartDate != "" && r.EndDate != ""
 	if r.StartDate == "" {
 		valErrors = append(valErrors, "start_date can't be empty")
-	}
-
-	if !regex.MatchString(r.StartDate) {
-		valErrors = append(valErrors, "start_date must be of format MM-YYYY")
-		needsDateVal = false
-	}
-
-	if r.EndDate != "" && !regex.MatchString(r.EndDate) {
-		valErrors = append(valErrors, "end_date must be of format MM-YYYY")
-		needsDateVal = false
-	}
-
-	if needsDateVal {
-		if err := validateDates(r.StartDate, r.EndDate); err != nil {
-			valErrors = append(valErrors, err.Error())
-		}
+	} else if err := validators.ValidateDates(r.StartDate, r.EndDate); err != nil {
+		valErrors = append(valErrors, err.Error())
 	}
 
 	if len(valErrors) > 0 {
 		return errors.New(strings.Join(valErrors, "; "))
 	}
 
-	return nil
-}
-
-func validateDates(startDate string, endDate string) error {
-	if startDate != "" && endDate != "" {
-		startSplit := strings.Split(startDate, "-")
-		endSplit := strings.Split(endDate, "-")
-		startYearStr := startSplit[1]
-		endYearStr := endSplit[1]
-		startYear, err := strconv.Atoi(startYearStr)
-		if err != nil {
-			return err
-		}
-		endYear, err := strconv.Atoi(endYearStr)
-		if err != nil {
-			return err
-		}
-
-		if startYear > endYear {
-			return errors.New("start_date must come before end_date")
-		}
-
-		startMonthStr := startSplit[0]
-		endMonthStr := endSplit[0]
-
-		startMonth, err := strconv.Atoi(startMonthStr)
-		if err != nil {
-			return err
-		}
-		endMonth, err := strconv.Atoi(endMonthStr)
-		if err != nil {
-			return err
-		}
-
-		if startYear == endYear && startMonth > endMonth {
-			return errors.New("start_date must come before end_date")
-		}
-	}
 	return nil
 }
