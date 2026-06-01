@@ -54,6 +54,14 @@ func ValidateDates(startDate string, endDate string) error {
 		if startYear == endYear && startMonth > endMonth {
 			return errors.New("start_date must come before end_date")
 		}
+
+		if startMonth < 1 || startMonth > 12 {
+			return errors.New("start_date must be between 01 and 12")
+		}
+
+		if endMonth < 1 || endMonth > 12 {
+			return errors.New("end_date must be between 01 and 12")
+		}
 	}
 	return nil
 }
